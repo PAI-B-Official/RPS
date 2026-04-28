@@ -501,7 +501,7 @@
             const newData = { id: matkulId, semester: semesterRomawi, nama: namaMatkul, dosen: dosen, kelompok: {} };
 
             if (API_URL !== "ISI_DENGAN_URL_WEB_APP_GAS_ANDA") {
-                showLoading("MENYIMPAN DATA...");
+                showLoading("MENYIMPAN...");
                 try {
                     const res = await fetch(API_URL, {
                         method: 'POST',
@@ -528,7 +528,7 @@
             if (!confirm("Yakin ingin menghapus mata kuliah ini secara permanen?")) return;
 
             if (API_URL !== "ISI_DENGAN_URL_WEB_APP_GAS_ANDA") {
-                showLoading("MENGHAPUS DATA...");
+                showLoading("MENGHAPUS...");
                 try {
                     const res = await fetch(API_URL, {
                         method: 'POST',
@@ -794,7 +794,7 @@
             const newDataKelompok = JSON.parse(JSON.stringify(tempKelompokData));
 
             if (API_URL !== "ISI_DENGAN_URL_WEB_APP_GAS_ANDA") {
-                showLoading("MENYIMPAN PERUBAHAN...");
+                showLoading("MENYIMPAN...");
                 try {
                     const res = await fetch(API_URL, {
                         method: 'POST',
