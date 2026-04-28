@@ -1,1 +1,935 @@
+<!DOCTYPE html>
+<html lang="id" class="selection:bg-emerald-200 dark:selection:bg-emerald-700">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RPS - Kelas PAI B</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: { 
+                    fontFamily: { 
+                        sans: ['Poppins', 'sans-serif'],
+                        tech: ['Orbitron', 'sans-serif'],
+                        digital: ['"VT323"', 'monospace']
+                    },
+                    colors: {
+                        'crimson-dark': '#1a0505',
+                        'crimson-main': '#8a0000',
+                        'crimson-light': '#ff1f1f',
+                        'glass': 'rgba(255, 255, 255, 0.05)',
+                        'neon-red': '#ff0033', 
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    },
+                    boxShadow: {
+                        'neon': '0 0 15px rgba(255, 0, 51, 0.3), 0 0 30px rgba(255, 0, 51, 0.1)',
+                        'crimson': '0 0 20px rgba(138, 0, 0, 0.5)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        @media (min-width: 640px) { .custom-scrollbar::-webkit-scrollbar { width: 5px; } }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.5); border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }
+        
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
 
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-pop-in { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes bounceCustom {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-custom { animation: bounceCustom 2s infinite ease-in-out; }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Hover Cards */
+        .rps-card { transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .rps-card:hover { transform: translateY(-5px); z-index: 20; box-shadow: 0 20px 25px -5px rgba(16, 185, 129, 0.2), 0 10px 10px -5px rgba(16, 185, 129, 0.1); }
+
+        /* Loader */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="relative h-[100dvh] text-gray-800 dark:text-gray-100 bg-gradient-to-br from-emerald-100 via-white to-emerald-50 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950 transition-colors duration-500 overflow-hidden flex flex-col font-sans select-none">
+
+    <!-- OVERLAY LOADING GLOBAL -->
+    <div id="global-loading" class="fixed inset-0 z-[999] bg-emerald-900/80 backdrop-blur-sm flex-col items-center justify-center transition-opacity duration-300 hidden">
+        <div class="loader mb-4"></div>
+        <p id="loading-text" class="text-white font-bold tracking-widest animate-pulse">MEMUAT DATA...</p>
+    </div>
+
+    <!-- Latar Belakang (Blobs) -->
+    <div class="fixed top-0 left-10 w-72 h-72 md:w-96 md:h-96 xl:w-[40rem] xl:h-[40rem] bg-emerald-300/40 dark:bg-emerald-700/20 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-70 animate-blob pointer-events-none z-0"></div>
+    <div class="fixed top-0 right-10 w-72 h-72 md:w-96 md:h-96 xl:w-[40rem] xl:h-[40rem] bg-emerald-200/50 dark:bg-emerald-900/30 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none z-0"></div>
+    <div class="fixed -bottom-8 left-20 w-72 h-72 md:w-96 md:h-96 xl:w-[40rem] xl:h-[40rem] bg-emerald-100/60 dark:bg-emerald-800/20 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-70 animate-blob animation-delay-4000 pointer-events-none z-0"></div>
+
+    <!-- HEADER DINAMIS -->
+    <header class="p-4 md:p-6 xl:p-8 flex justify-between items-center bg-white/70 dark:bg-slate-800/80 backdrop-blur-md shadow-md z-20 relative border-b border-white/50 dark:border-slate-700/50 shrink-0">
+        <div class="flex items-center gap-2 md:gap-4 overflow-hidden">
+            <button id="btn-back" class="shrink-0 mr-1 p-2 md:p-3 bg-emerald-100 dark:bg-slate-700 rounded-full hover:bg-emerald-200 dark:hover:bg-slate-600 text-emerald-700 dark:text-emerald-300 transition shadow-sm active:scale-95" onclick="window.history.back()">
+                <svg class="w-5 h-5 md:w-6 md:h-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div id="header-icon-container" class="shrink-0">
+                <svg class="w-7 h-7 md:w-9 md:h-9 xl:w-12 xl:h-12 text-emerald-500 dark:text-emerald-400 drop-shadow-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </div>
+            <h1 id="header-title" class="text-xl md:text-3xl xl:text-4xl font-bold tracking-wide text-emerald-800 dark:text-emerald-100 truncate">RPS MATKUL</h1>
+        </div>
+        <div class="flex items-center gap-2 xl:gap-4 shrink-0">
+            <button onclick="toggleTheme()" class="p-2 md:p-3 xl:p-4 bg-emerald-100 dark:bg-slate-700 rounded-full hover:bg-emerald-200 dark:hover:bg-slate-600 text-emerald-700 dark:text-emerald-300 transition shadow-sm active:scale-95">
+                <span id="theme-icon-light" class="hidden"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6 xl:w-8 xl:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
+                <span id="theme-icon-dark"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6 xl:w-8 xl:h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- AREA KONTEN UTAMA -->
+    <main class="flex-grow relative w-full overflow-y-auto overflow-x-hidden custom-scrollbar z-10 p-4 md:p-8">
+        <div class="w-full max-w-5xl mx-auto space-y-8 pb-20 animate-pop-in">
+            
+            <div class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-lg border border-white/50 dark:border-slate-700/50">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl md:text-3xl font-black text-gray-800 dark:text-white tracking-wide leading-tight">Rencana Pembelajaran Semester</h2>
+                    <p class="text-emerald-600 dark:text-emerald-400 font-medium mt-2 text-sm md:text-base">Kelola daftar dan pembagian kelompok Mata Kuliah</p>
+                </div>
+
+                <div class="relative max-w-2xl mx-auto mb-6">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400 dark:text-gray-500"></i>
+                    </div>
+                    <input type="text" id="searchInput" onkeyup="filterRPS()" placeholder="Cari mata kuliah atau nama dosen..." class="w-full pl-11 pr-4 py-3 md:py-4 bg-white dark:bg-slate-900 border-2 border-emerald-100 dark:border-slate-700 rounded-2xl focus:outline-none focus:border-emerald-400 dark:focus:border-emerald-500 focus:ring-4 focus:ring-emerald-400/20 transition-all text-gray-700 dark:text-gray-200 shadow-sm text-sm">
+                </div>
+
+                <div class="flex justify-center pt-2 border-t border-emerald-100 dark:border-slate-700">
+                    <button onclick="openSemesterModal()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95 flex items-center gap-2 mt-4 text-sm md:text-base">
+                        <i class="fas fa-plus-circle text-lg"></i> Tambahkan Semester
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONTAINER RPS -->
+            <div id="rpsContainer" class="space-y-8">
+                <!-- Semester disuntik via JS -->
+            </div>
+
+            <div id="emptyState" class="flex flex-col items-center justify-center py-10 text-center">
+                <div class="w-20 h-20 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                    <i class="fas fa-folder-open text-3xl text-gray-400 dark:text-gray-500"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200" id="emptyStateTitle">Belum Ada Data Semester</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm" id="emptyStateDesc">Silakan klik tombol "Tambahkan Semester" di atas untuk memulai.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL TAMBAH SEMESTER -->
+    <div id="modal-semester" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
+        <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl w-full max-w-sm shadow-2xl transform scale-95 transition-transform duration-300 border border-white/20 dark:border-slate-700" id="modal-semester-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-black text-gray-800 dark:text-white tracking-wide">Pilih Semester</h3>
+                <button onclick="closeSemesterModal()" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Angka Romawi Semester</label>
+                <div class="relative">
+                    <select id="semester-select" class="w-full p-3 pl-4 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-gray-200 font-bold">
+                        <option value="I">Semester I</option>
+                        <option value="II">Semester II</option>
+                        <option value="III">Semester III</option>
+                        <option value="IV">Semester IV</option>
+                        <option value="V">Semester V</option>
+                        <option value="VI">Semester VI</option>
+                        <option value="VII">Semester VII</option>
+                        <option value="VIII">Semester VIII</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeSemesterModal()" class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition-colors dark:text-gray-400">Batal</button>
+                <button onclick="addSemester()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 text-sm font-bold rounded-xl shadow-md transition-colors">Tambahkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH MATKUL -->
+    <div id="modal-matkul" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
+        <div class="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-3xl w-full max-w-md shadow-2xl transform scale-95 transition-transform duration-300 border border-white/20 dark:border-slate-700" id="modal-matkul-content">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-black text-gray-800 dark:text-white tracking-wide">Tambah Matkul</h3>
+                    <p class="text-xs font-medium text-emerald-600 dark:text-emerald-400 mt-1" id="matkul-modal-subtitle">Semester X</p>
+                </div>
+                <button onclick="closeMatkulModal()" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4 mb-8">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Nama Mata Kuliah</label>
+                    <input type="text" id="input-matkul-nama" placeholder="Contoh: Ulumul Qur'an" class="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-gray-200 text-sm font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">Nama Dosen Pengampu</label>
+                    <input type="text" id="input-matkul-dosen" placeholder="Contoh: Dr. Fakhry, M.Ag." class="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-gray-200 text-sm font-medium">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeMatkulModal()" class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition-colors dark:text-gray-400">Batal</button>
+                <button onclick="addMatkul()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2.5 text-sm font-bold rounded-xl shadow-md transition-colors flex items-center gap-2">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL MATKUL (ANTRIAN & PESERTA) -->
+    <div id="modal-detail" class="fixed inset-0 z-[110] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0 p-4">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl w-full max-w-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/20 dark:border-slate-700 flex flex-col max-h-[90vh]" id="modal-detail-content">
+            
+            <div class="flex items-start justify-between mb-4 border-b border-gray-100 dark:border-slate-800 pb-4 shrink-0">
+                <div class="pr-4">
+                    <h3 id="detail-matkul-dosen" class="text-xl md:text-2xl font-black text-gray-800 dark:text-white tracking-wide leading-tight line-clamp-2">Nama Dosen</h3>
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                        <i class="fas fa-book shrink-0"></i> <span id="detail-matkul-nama" class="truncate">Nama Matkul</span>
+                    </p>
+                </div>
+                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-red-500 transition-colors p-1 bg-gray-100 dark:bg-slate-800 rounded-full w-8 h-8 flex items-center justify-center shrink-0">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="overflow-y-auto custom-scrollbar flex-grow pr-2">
+                <div class="bg-emerald-50 dark:bg-emerald-900/10 p-4 md:p-5 rounded-2xl border border-emerald-100 dark:border-emerald-800/30 mb-6">
+                    <h4 class="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-4 border-b border-emerald-200/50 dark:border-emerald-800/50 pb-2">Buat Kelompok</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 uppercase">No. Kelompok</label>
+                            <input type="text" id="draft-input-kelompok" placeholder="Contoh: 1" class="w-full p-3 bg-white dark:bg-slate-900 border border-emerald-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-gray-200 text-sm font-bold shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-2 uppercase">Tambah Peserta</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="draft-input-peserta" placeholder="Nama peserta..." onkeypress="if(event.key === 'Enter') tambahPesertaDraft()" class="flex-grow p-3 bg-white dark:bg-slate-900 border border-emerald-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-800 dark:text-gray-200 text-sm shadow-sm">
+                                <button onclick="tambahPesertaDraft()" class="bg-emerald-500 hover:bg-emerald-600 text-white w-12 rounded-xl flex items-center justify-center transition-colors active:scale-95 shadow-sm">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-gray-500 dark:text-gray-500 mb-2">Draft Peserta Kelompok Ini:</label>
+                        <div id="draft-peserta-list" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <button onclick="simpanKelompokBaru()" class="w-full bg-emerald-100 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-700/60 font-bold py-2.5 rounded-xl transition-colors text-sm shadow-sm border border-emerald-200 dark:border-emerald-700/50 flex justify-center items-center gap-2 active:scale-95">
+                        <i class="fas fa-layer-group"></i> Kelompokan
+                    </button>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-slate-800/50 p-4 md:p-5 rounded-2xl border border-gray-100 dark:border-slate-700/50">
+                    <h4 class="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4 border-b border-gray-200 dark:border-slate-700 pb-2">Daftar Kelompok Tersimpan</h4>
+                    <div id="detail-kelompok-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-gray-100 dark:border-slate-800 flex justify-end shrink-0">
+                <button onclick="simpanDetailUtama()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 text-sm font-bold rounded-xl shadow-md transition-colors flex items-center gap-2 w-full md:w-auto justify-center active:scale-95">
+                    <i class="fas fa-save"></i> Menyimpan Perubahan
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // ==========================================
+        //  MASUKKAN URL GOOGLE APPS SCRIPT DI SINI
+        // ==========================================
+        const API_URL = "https://script.google.com/macros/s/AKfycby2bVGhZojuQR2tCw9LLlmooupdw0WP9HC6jyQzZo2mfdt2nFyTchIAlY1rvCN2LTuBLg/exec"; 
+
+        let targetSemesterId = null;
+        let matkulData = {};
+        let currentDetailId = null;
+        let tempKelompokData = {}; 
+        let draftPeserta = []; 
+        
+        const colorsList = [
+            { bg: 'bg-emerald-100 dark:bg-emerald-900/50', text: 'text-emerald-600 dark:text-emerald-400' },
+            { bg: 'bg-indigo-100 dark:bg-indigo-900/50', text: 'text-indigo-600 dark:text-indigo-400' },
+            { bg: 'bg-orange-100 dark:bg-orange-900/50', text: 'text-orange-600 dark:text-orange-400' },
+            { bg: 'bg-blue-100 dark:bg-blue-900/50', text: 'text-blue-600 dark:text-blue-400' },
+            { bg: 'bg-purple-100 dark:bg-purple-900/50', text: 'text-purple-600 dark:text-purple-400' },
+            { bg: 'bg-rose-100 dark:bg-rose-900/50', text: 'text-rose-600 dark:text-rose-400' }
+        ];
+
+        // --- SISTEM TEMA ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('presensi_theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon-light').classList.remove('hidden');
+                document.getElementById('theme-icon-dark').classList.add('hidden');
+            } else {
+                document.getElementById('theme-icon-light').classList.add('hidden');
+                document.getElementById('theme-icon-dark').classList.remove('hidden');
+            }
+        }
+        
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('presensi_theme', isDark ? 'dark' : 'light');
+            if (isDark) {
+                document.getElementById('theme-icon-light').classList.remove('hidden');
+                document.getElementById('theme-icon-dark').classList.add('hidden');
+            } else {
+                document.getElementById('theme-icon-light').classList.add('hidden');
+                document.getElementById('theme-icon-dark').classList.remove('hidden');
+            }
+        }
+
+        // --- LOADING UI ---
+        function showLoading(text = "MEMUAT DATA...") {
+            document.getElementById('loading-text').innerText = text;
+            const loader = document.getElementById('global-loading');
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+            setTimeout(() => loader.classList.remove('opacity-0'), 10);
+        }
+
+        function hideLoading() {
+            const loader = document.getElementById('global-loading');
+            loader.classList.add('opacity-0');
+            setTimeout(() => {
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
+            }, 300);
+        }
+
+        // --- FETCH DATA DARI SPREADSHEET (GET) ---
+        async function loadDataFromDB() {
+            if (API_URL === "ISI_DENGAN_URL_WEB_APP_GAS_ANDA") {
+                console.warn("API URL belum diatur, menjalankan mode offline.");
+                updateEmptyStateUI();
+                return;
+            }
+
+            showLoading("MEMUAT...");
+            try {
+                const response = await fetch(API_URL);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    matkulData = {};
+                    result.data.forEach(item => {
+                        // Daftarkan di objek global
+                        matkulData[item.id] = {
+                            semester: item.semester,
+                            nama: item.nama,
+                            dosen: item.dosen,
+                            kelompok: item.kelompok || {}
+                        };
+                        
+                        // Pastikan UI Semester exist
+                        ensureSemesterUI(item.semester);
+                        // Build Card
+                        renderCardMatkul(item.id, item.semester, item.nama, item.dosen);
+                        // Update Stat/Accordion
+                        updateCardStats(item.id);
+                    });
+                }
+            } catch (err) {
+                console.error("Gagal memuat data:", err);
+                alert("Gagal terhubung ke database spreadsheet.");
+            } finally {
+                hideLoading();
+                updateEmptyStateUI();
+            }
+        }
+
+        // --- MANAJEMEN UI SEMESTER ---
+        function openSemesterModal() {
+            const modal = document.getElementById('modal-semester');
+            const content = document.getElementById('modal-semester-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeSemesterModal() {
+            const modal = document.getElementById('modal-semester');
+            const content = document.getElementById('modal-semester-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        function ensureSemesterUI(semesterRomawi) {
+            const container = document.getElementById('rpsContainer');
+            if (!document.getElementById(`semester-${semesterRomawi}`)) {
+                const semesterDiv = document.createElement('div');
+                semesterDiv.id = `semester-${semesterRomawi}`;
+                semesterDiv.className = 'semester-group animate-pop-in';
+                
+                semesterDiv.innerHTML = `
+                    <div class="flex items-center justify-between mb-4 border-b border-emerald-200 dark:border-slate-700 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-emerald-500 w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-lg text-lg">${semesterRomawi}</div>
+                            <h3 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100">Semester ${semesterRomawi}</h3>
+                        </div>
+                        <button onclick="openMatkulModal('${semesterRomawi}')" class="bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 font-bold py-2 px-4 rounded-xl transition-colors flex items-center gap-2 text-xs md:text-sm shadow-sm active:scale-95">
+                            <i class="fas fa-plus"></i> <span class="hidden sm:inline">Tambah Matkul</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 matkul-grid-container"></div>
+                    <div class="empty-matkul-state text-center py-6 text-gray-400 dark:text-gray-500 text-sm italic">Belum ada mata kuliah di semester ini.</div>
+                `;
+                container.appendChild(semesterDiv);
+            }
+        }
+
+        function addSemester() {
+            const semesterRomawi = document.getElementById('semester-select').value;
+            if (document.getElementById(`semester-${semesterRomawi}`)) {
+                alert(`Semester ${semesterRomawi} sudah ada!`);
+                return;
+            }
+            ensureSemesterUI(semesterRomawi);
+            closeSemesterModal();
+            updateEmptyStateUI();
+        }
+
+        // --- MANAJEMEN MATKUL (POST KE DB) ---
+        function openMatkulModal(semesterRomawi) {
+            targetSemesterId = `semester-${semesterRomawi}`;
+            document.getElementById('matkul-modal-subtitle').innerText = `Untuk Semester ${semesterRomawi}`;
+            document.getElementById('input-matkul-nama').value = '';
+            document.getElementById('input-matkul-dosen').value = '';
+
+            const modal = document.getElementById('modal-matkul');
+            const content = document.getElementById('modal-matkul-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeMatkulModal() {
+            const modal = document.getElementById('modal-matkul');
+            const content = document.getElementById('modal-matkul-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                targetSemesterId = null;
+            }, 300);
+        }
+
+        async function addMatkul() {
+            if (!targetSemesterId) return;
+
+            const namaMatkul = document.getElementById('input-matkul-nama').value.trim();
+            const dosen = document.getElementById('input-matkul-dosen').value.trim();
+            const semesterRomawi = targetSemesterId.replace('semester-', '');
+
+            if (!namaMatkul || !dosen) {
+                alert("Mohon lengkapi Nama Matkul dan Nama Dosen!");
+                return;
+            }
+
+            const matkulId = 'M-' + Date.now();
+            const newData = { id: matkulId, semester: semesterRomawi, nama: namaMatkul, dosen: dosen, kelompok: {} };
+
+            if (API_URL !== "ISI_DENGAN_URL_WEB_APP_GAS_ANDA") {
+                showLoading("MENYIMPAN DATA...");
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'saveMatkul', data: newData })
+                    });
+                    const result = await res.json();
+                    if (result.status !== 'success') throw new Error(result.message);
+                } catch (err) {
+                    hideLoading();
+                    alert("Gagal menyimpan ke database: " + err.message);
+                    return;
+                }
+                hideLoading();
+            }
+
+            matkulData[matkulId] = newData;
+            renderCardMatkul(matkulId, semesterRomawi, namaMatkul, dosen);
+            closeMatkulModal();
+            updateEmptyStateUI();
+        }
+
+        async function hapusMatkul(matkulId) {
+            if (!confirm("Yakin ingin menghapus mata kuliah ini secara permanen?")) return;
+
+            if (API_URL !== "ISI_DENGAN_URL_WEB_APP_GAS_ANDA") {
+                showLoading("MENGHAPUS DATA...");
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'deleteMatkul', data: { id: matkulId } })
+                    });
+                    const result = await res.json();
+                    if (result.status !== 'success') throw new Error(result.message);
+                } catch (err) {
+                    hideLoading();
+                    alert("Gagal menghapus dari database.");
+                    return;
+                }
+                hideLoading();
+            }
+
+            document.getElementById(matkulId).remove();
+            delete matkulData[matkulId];
+
+            // Cek apakah grid kosong, tampilkan empty state
+            const semesterGroups = document.querySelectorAll('.semester-group');
+            semesterGroups.forEach(group => {
+                const grid = group.querySelector('.matkul-grid-container');
+                const emptyState = group.querySelector('.empty-matkul-state');
+                if (grid.children.length === 0 && emptyState) {
+                    emptyState.style.display = 'block';
+                }
+            });
+            updateEmptyStateUI();
+        }
+
+        function renderCardMatkul(matkulId, semester, nama, dosen) {
+            const semesterEl = document.getElementById(`semester-${semester}`);
+            const gridContainer = semesterEl.querySelector('.matkul-grid-container');
+            const emptyLabel = semesterEl.querySelector('.empty-matkul-state');
+            if(emptyLabel) emptyLabel.style.display = 'none';
+
+            const randColor = colorsList[Math.floor(Math.random() * colorsList.length)];
+            const safeDosen = dosen.replace(/'/g, "&apos;");
+            const safeNama = nama.replace(/'/g, "&apos;");
+
+            const cardHtml = `
+                <div id="${matkulId}" class="rps-card bg-white/80 dark:bg-slate-800/80 backdrop-blur-md rounded-2xl p-5 border border-white/50 dark:border-slate-700/50 flex flex-col h-full animate-pop-in relative">
+                    <!-- Tombol Hapus -->
+                    <button onclick="hapusMatkul('${matkulId}')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-100 dark:bg-slate-700/50 hover:bg-red-50 dark:hover:bg-red-900/30 p-2 rounded-lg transition-colors shadow-sm">
+                        <i class="fas fa-trash-alt text-sm"></i>
+                    </button>
+
+                    <div class="flex items-center gap-3 mb-3 pr-10">
+                        <div class="${randColor.bg} ${randColor.text} p-3 rounded-xl shrink-0">
+                            <i class="fas fa-user text-xl"></i>
+                        </div>
+                        <h4 class="text-base md:text-lg font-bold text-gray-800 dark:text-white leading-tight dosen-name line-clamp-2">${safeDosen}</h4>
+                    </div>
+                    
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-2 matkul-title">
+                        <i class="fas fa-book text-xs shrink-0"></i> 
+                        <span class="truncate" title="${safeNama}">${safeNama}</span>
+                    </p>
+
+                    <div class="mt-auto mb-4 border border-gray-100 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm bg-white dark:bg-slate-800">
+                        <button onclick="toggleAccordion('acc-${matkulId}', 'icon-${matkulId}')" id="btn-acc-${matkulId}" class="w-full bg-gray-50 dark:bg-slate-800/80 px-4 py-3 flex justify-between items-center text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                            <span id="stats-title-${matkulId}">Detail Kelompok (0)</span>
+                            <i id="icon-${matkulId}" class="fas fa-chevron-down transition-transform duration-300"></i>
+                        </button>
+                        
+                        <div id="acc-${matkulId}" class="hidden flex-col gap-3 p-4 bg-white/50 dark:bg-slate-900/30 border-t border-gray-100 dark:border-slate-700 max-h-48 overflow-y-auto custom-scrollbar">
+                            <div class="text-gray-400 dark:text-gray-500 italic text-center text-xs">Belum ada kelompok.</div>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-gray-100 dark:border-slate-700/50">
+                        <button onclick="openDetailModal('${matkulId}')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 text-sm md:text-base">
+                            <i class="fas fa-edit"></i> Kelola Kelompok
+                        </button>
+                    </div>
+                </div>
+            `;
+            gridContainer.insertAdjacentHTML('beforeend', cardHtml);
+        }
+
+        function toggleAccordion(accId, iconId) {
+            const acc = document.getElementById(accId);
+            const icon = document.getElementById(iconId);
+            if(acc.classList.contains('hidden')) {
+                acc.classList.remove('hidden');
+                acc.classList.add('flex');
+                icon.classList.add('rotate-180');
+            } else {
+                acc.classList.add('hidden');
+                acc.classList.remove('flex');
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        // --- MANAJEMEN DETAIL KELOMPOK (MODAL) ---
+        function openDetailModal(matkulId) {
+            currentDetailId = matkulId;
+            const data = matkulData[matkulId];
+            
+            document.getElementById('detail-matkul-nama').innerText = data.nama;
+            document.getElementById('detail-matkul-dosen').innerText = data.dosen;
+            document.getElementById('draft-input-kelompok').value = '';
+            document.getElementById('draft-input-peserta').value = '';
+            draftPeserta = [];
+            tempKelompokData = JSON.parse(JSON.stringify(data.kelompok || {}));
+            
+            renderDraftPeserta();
+            renderKelompokTersimpan();
+
+            const modal = document.getElementById('modal-detail');
+            const content = document.getElementById('modal-detail-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('modal-detail');
+            const content = document.getElementById('modal-detail-content');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                currentDetailId = null;
+                tempKelompokData = {};
+                draftPeserta = [];
+            }, 300);
+        }
+
+        function renderDraftPeserta() {
+            const container = document.getElementById('draft-peserta-list');
+            container.innerHTML = '';
+            if(draftPeserta.length === 0) {
+                container.innerHTML = '<span class="text-xs text-gray-400 dark:text-gray-500 italic">Belum ada peserta ditambahkan.</span>';
+                return;
+            }
+            draftPeserta.forEach((p, idx) => {
+                container.innerHTML += `
+                    <span class="bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800/50 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 shadow-sm">
+                        ${p} <i class="fas fa-times text-red-400 cursor-pointer hover:text-red-600 dark:hover:text-red-500" onclick="hapusPesertaDraft(${idx})"></i>
+                    </span>
+                `;
+            });
+        }
+
+        function tambahPesertaDraft() {
+            const input = document.getElementById('draft-input-peserta');
+            const val = input.value.trim();
+            if(val !== '') {
+                draftPeserta.push(val);
+                input.value = '';
+                renderDraftPeserta();
+                input.focus();
+            }
+        }
+
+        function hapusPesertaDraft(idx) {
+            draftPeserta.splice(idx, 1);
+            renderDraftPeserta();
+        }
+
+        function simpanKelompokBaru() {
+            const inputKel = document.getElementById('draft-input-kelompok');
+            let kelVal = inputKel.value.trim();
+            if(kelVal === '') { alert('Mohon isi Nomor Kelompok!'); inputKel.focus(); return; }
+            if(draftPeserta.length === 0) { alert('Mohon tambahkan minimal 1 peserta!'); return; }
+            
+            if(!tempKelompokData[kelVal]) tempKelompokData[kelVal] = [];
+            tempKelompokData[kelVal] = tempKelompokData[kelVal].concat(draftPeserta);
+            
+            inputKel.value = '';
+            document.getElementById('draft-input-peserta').value = '';
+            draftPeserta = [];
+            renderDraftPeserta();
+            renderKelompokTersimpan();
+        }
+
+        function renderKelompokTersimpan() {
+            const listContainer = document.getElementById('detail-kelompok-list');
+            listContainer.innerHTML = '';
+            const keys = Object.keys(tempKelompokData);
+            
+            if(keys.length === 0) {
+                listContainer.innerHTML = '<div class="text-center py-6 text-sm text-gray-400 dark:text-gray-500 italic">Belum ada kelompok yang disimpan.</div>';
+                return;
+            }
+            
+            keys.sort((a,b) => {
+                const nA = parseInt(a); const nB = parseInt(b);
+                if(!isNaN(nA) && !isNaN(nB)) return nA - nB;
+                return a.localeCompare(b);
+            });
+            
+            keys.forEach(k => {
+                const peserta = tempKelompokData[k];
+                if(peserta.length === 0) return;
+                const safeK = k.replace(/'/g, "\\'");
+                
+                let html = `
+                <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/10 px-4 py-3 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                        <span class="font-bold text-gray-700 dark:text-gray-200 text-sm">Kelompok: <span class="text-indigo-600 dark:text-indigo-400 text-base">${k}</span></span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 px-2.5 py-1 rounded-md font-bold">${peserta.length} Peserta</span>
+                            <button onclick="hapusKelompokSeluruhnya('${safeK}')" class="text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-900/30 p-1.5 rounded-lg transition-colors">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-3"><div class="flex flex-wrap gap-2">
+                `;
+                peserta.forEach((p, idx) => {
+                    html += `
+                        <span class="bg-gray-50 dark:bg-slate-700/50 text-gray-700 dark:text-gray-300 text-sm px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-600 flex items-center gap-2 group">
+                            ${p} <i class="fas fa-times text-gray-400 group-hover:text-red-500 cursor-pointer" onclick="hapusPesertaDariKelompok('${safeK}', ${idx})"></i>
+                        </span>
+                    `;
+                });
+                html += `</div></div></div>`;
+                listContainer.innerHTML += html;
+            });
+        }
+
+        function hapusKelompokSeluruhnya(k) {
+            if(confirm(`Hapus kelompok ${k} beserta isinya?`)) {
+                delete tempKelompokData[k];
+                renderKelompokTersimpan();
+            }
+        }
+
+        function hapusPesertaDariKelompok(k, idx) {
+            tempKelompokData[k].splice(idx, 1);
+            if(tempKelompokData[k].length === 0) delete tempKelompokData[k];
+            renderKelompokTersimpan();
+        }
+
+        // --- SIMPAN UPDATE KELOMPOK KE DB ---
+        async function simpanDetailUtama() {
+            if(!currentDetailId) return;
+            if(draftPeserta.length > 0 || document.getElementById('draft-input-kelompok').value.trim() !== '') {
+                if(!confirm("Anda memiliki draft yang belum dikelompokan. Yakin ingin membuangnya?")) return;
+            }
+            
+            const newDataKelompok = JSON.parse(JSON.stringify(tempKelompokData));
+
+            if (API_URL !== "ISI_DENGAN_URL_WEB_APP_GAS_ANDA") {
+                showLoading("MENYIMPAN PERUBAHAN...");
+                try {
+                    const res = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({ action: 'updateKelompok', data: { id: currentDetailId, kelompok: newDataKelompok } })
+                    });
+                    const result = await res.json();
+                    if (result.status !== 'success') throw new Error(result.message);
+                } catch (err) {
+                    hideLoading();
+                    alert("Gagal mengupdate ke database.");
+                    return;
+                }
+                hideLoading();
+            }
+
+            matkulData[currentDetailId].kelompok = newDataKelompok;
+            updateCardStats(currentDetailId);
+            closeDetailModal();
+        }
+
+        function updateCardStats(matkulId) {
+            const data = matkulData[matkulId];
+            const kelompokKeys = Object.keys(data.kelompok || {});
+            const totalKelompok = kelompokKeys.length;
+            
+            const titleEl = document.getElementById(`stats-title-${matkulId}`);
+            const btnAccEl = document.getElementById(`btn-acc-${matkulId}`);
+            const accEl = document.getElementById(`acc-${matkulId}`);
+            
+            if(titleEl && btnAccEl) {
+                titleEl.innerText = `Detail Kelompok (${totalKelompok})`;
+                if(totalKelompok > 0) {
+                    btnAccEl.classList.remove('text-gray-600', 'dark:text-gray-400');
+                    btnAccEl.classList.add('text-indigo-600', 'dark:text-indigo-400');
+                } else {
+                    btnAccEl.classList.add('text-gray-600', 'dark:text-gray-400');
+                    btnAccEl.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+                }
+            }
+
+            if(accEl) {
+                if(totalKelompok === 0) {
+                    accEl.innerHTML = `<div class="text-gray-400 dark:text-gray-500 italic text-center text-xs">Belum ada kelompok.</div>`;
+                } else {
+                    kelompokKeys.sort((a,b) => {
+                        const nA = parseInt(a); const nB = parseInt(b);
+                        if(!isNaN(nA) && !isNaN(nB)) return nA - nB;
+                        return a.localeCompare(b);
+                    });
+                    
+                    let html = '';
+                    kelompokKeys.forEach(k => {
+                        const peserta = data.kelompok[k];
+                        html += `
+                            <div class="mb-3 last:mb-0">
+                                <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-1 border-b border-emerald-100 dark:border-emerald-900/50 pb-1 flex justify-between">
+                                    <span>Kelompok ${k}</span>
+                                    <span class="text-gray-400 dark:text-gray-500 font-normal">(${peserta.length} Orang)</span>
+                                </div>
+                                <ul class="list-none space-y-1.5 mt-2">
+                        `;
+                        peserta.forEach(p => {
+                            html += `<li class="text-xs text-gray-600 dark:text-gray-300 flex items-start gap-2 leading-tight">
+                                        <i class="fas fa-user-circle text-gray-300 dark:text-gray-600 mt-0.5"></i> ${p}
+                                     </li>`;
+                        });
+                        html += `</ul></div>`;
+                    });
+                    accEl.innerHTML = html;
+                }
+            }
+        }
+
+        // --- FILTER / PENCARIAN ---
+        function updateEmptyStateUI() {
+            const rpsContainer = document.getElementById('rpsContainer');
+            const emptyState = document.getElementById('emptyState');
+            if (rpsContainer.children.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                document.getElementById('emptyStateTitle').innerText = "Belum Ada Data Semester";
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+        }
+
+        function filterRPS() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const semesterGroups = document.querySelectorAll('.semester-group');
+            let hasVisibleCardsTotal = false;
+
+            if (input === '') {
+                semesterGroups.forEach(group => {
+                    group.style.display = 'block';
+                    group.querySelectorAll('.rps-card').forEach(card => card.style.display = 'flex');
+                });
+                updateEmptyStateUI();
+                return;
+            }
+
+            semesterGroups.forEach(group => {
+                const cards = group.querySelectorAll('.rps-card');
+                let hasVisibleCardInGroup = false;
+
+                cards.forEach(card => {
+                    const matkulTitle = card.querySelector('.matkul-title').innerText.toLowerCase();
+                    const dosenName = card.querySelector('.dosen-name').innerText.toLowerCase();
+                    if (matkulTitle.includes(input) || dosenName.includes(input)) {
+                        card.style.display = 'flex';
+                        hasVisibleCardInGroup = true;
+                        hasVisibleCardsTotal = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                group.style.display = hasVisibleCardInGroup ? 'block' : 'none';
+            });
+
+            const emptyState = document.getElementById('emptyState');
+            if(hasVisibleCardsTotal) {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            } else {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+                document.getElementById('emptyStateTitle').innerText = "Pencarian Tidak Ditemukan";
+            }
+        }
+
+        // --- INISIALISASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadDataFromDB(); // Memuat data dari server
+        });
+    </script>
+</body>
+</html>
